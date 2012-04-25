@@ -29,12 +29,16 @@ if __name__ == '__main__':
     '''
     options = '(chm|pdf|pdf.part|chm.part|chm.chm)'
     pattern = r'(^.*\([0-9]+\)\.'+options+'$)'
+    origs = re.match(r'(^.*?.)\([0-9]+\)\.'+options+'+$', 'asdfasf(2).pdf.part')
+    print origs.groups()
     print re.match(pattern, 'asdfasdf(2).chm.chm').groups()
     sys.exit()
     '''
+
     try:
-        ext_table = ['chm', 'pdf', 'tar.gz', 'zip', 'rar','tar']
-        options = '(chm|pdf|pdf.part|chm.part|tar.gz|gz|tar|rar|zip)'
+        # 异常部分
+        ext_table = ['.part']
+        options = '(chm|pdf|chm.part|pdf.part|tar.gz|tar|rar|zip)'
         pattern = r'(^.*\([0-9]+\)\.'+options+'+$)'
         greeting = u"请输入绝对路径:>>>>\n"
         path = raw_input(greeting.encode('utf8'))
@@ -50,12 +54,20 @@ if __name__ == '__main__':
                         each_size = getsize(filename)
                         allsize += each_size
                         dupfiles.append((file ,convert_bytes(each_size)))
-                        origs = re.match(r'(^.*?.)\([0-9]+\)\.('+options+'+)$',file)
+                        origs = re.match(r'(^.*?.)\([0-9]+\)\.'+options+'+$',file)
                         if origs:
                             try:
+                                origs_tuple = origs.groups()
                                 '''Todo::: 文件明额外部分应取得'''
-                                #if origs.group()[1].find('chm'):
-                                origname = origs.groups()[0]+'.'+origs.groups()[1]
+                                for ext in ext_table:
+                                    if ext in origs_tuple[1]:
+                                        origname = \
+                                        origs_tuple[0]+'.'+''.join(origs_tuple[1].split(ext))
+                                    else:
+                                        origname = \
+                                        origs_tuple[0]+'.'+origs_tuple[1]
+                                #print 'ori::::%s' % origname
+                                #print filename
                                 origfile = os.path.join(root, origname)
                             except Exception, e:
                                 print 'Error::: %s' % str(e)
@@ -67,15 +79,15 @@ if __name__ == '__main__':
 
                         if origsize > 0:
                             if origsize >= each_size:
-                                print u'原文件大于等于重复文件:::删除重复文件'
-                                #os.remove(filename)
+                                #print u'原文件大于等于重复文件:::删除重复文件'
+                                os.remove(filename)
                             elif origsize < each_size:
-                                print u'原文件小于重复文件:::替换成原文件'
-                                #os.rename(filename, origfile)
+                                #print u'原文件小于重复文件:::替换成原文件'
+                                os.rename(filename, origfile)
                         else:
                             if origsize <= each_size:
-                                print u"不存在原文件:::创建原文件"
-                                #os.rename(filename, origfile)
+                                #print u"不存在原文件:::创建原文件"
+                                os.rename(filename, origfile)
 
 
         else:
