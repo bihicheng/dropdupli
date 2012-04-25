@@ -26,13 +26,20 @@ def convert_bytes(bytes):
     return size
 
 if __name__ == '__main__':
+    '''
+    options = '(chm|pdf|pdf.part|chm.part|chm.chm)'
+    pattern = r'(^.*\([0-9]+\)\.'+options+'$)'
+    print re.match(pattern, 'asdfasdf(2).chm.chm').groups()
+    sys.exit()
+    '''
     try:
-        options = '[chm|pdf]'
+        ext_table = ['chm', 'pdf', 'tar.gz', 'zip', 'rar','tar']
+        options = '(chm|pdf|pdf.part|chm.part|tar.gz|gz|tar|rar|zip)'
         pattern = r'(^.*\([0-9]+\)\.'+options+'+$)'
         greeting = u"请输入绝对路径:>>>>\n"
         path = raw_input(greeting.encode('utf8'))
         dupfiles = []
-        size = 0
+        allsize = 0
 
         if os.path.exists(path):
             for root, dirs, files in os.walk(path):
@@ -41,12 +48,13 @@ if __name__ == '__main__':
                     dup = re.match(pattern, filename)
                     if dup:
                         each_size = getsize(filename)
-                        size += each_size
+                        allsize += each_size
                         dupfiles.append((file ,convert_bytes(each_size)))
-                        #origfile = dup.group()
                         origs = re.match(r'(^.*?.)\([0-9]+\)\.('+options+'+)$',file)
                         if origs:
                             try:
+                                '''Todo::: 文件明额外部分应取得'''
+                                #if origs.group()[1].find('chm'):
                                 origname = origs.groups()[0]+'.'+origs.groups()[1]
                                 origfile = os.path.join(root, origname)
                             except Exception, e:
@@ -56,15 +64,19 @@ if __name__ == '__main__':
                             origsize = getsize(origfile)
                         else:
                             origsize = 0
-                        print origsize, each_size
-                        if origsize >= each_size:
-                            print 'removing...'
-                            os.remove(filename)
-                        elif 0 < origsize < each_size:
-                            print 'renaming...'
-                            os.rename(filename, origfile)
+
+                        if origsize > 0:
+                            if origsize >= each_size:
+                                print u'原文件大于等于重复文件:::删除重复文件'
+                                #os.remove(filename)
+                            elif origsize < each_size:
+                                print u'原文件小于重复文件:::替换成原文件'
+                                #os.rename(filename, origfile)
                         else:
-                            print 'None'
+                            if origsize <= each_size:
+                                print u"不存在原文件:::创建原文件"
+                                #os.rename(filename, origfile)
+
 
         else:
             print u"路径无效\n"
@@ -73,11 +85,8 @@ if __name__ == '__main__':
         sys.exit()
     else:
         sys.exit()
-        pass
     finally:
-        print u"重复文件总数::: %s\n 释放资源:::%s\n" % (len(dupfiles), convert_bytes(size))
         for file, size in dupfiles:
             print u"***********\nname:%s\nsize:%s\n" % (file, size)
-        pass
 
-
+        print u"重复文件总数::: %s\n 释放资源:::%s\n" % (len(dupfiles), convert_bytes(allsize))
